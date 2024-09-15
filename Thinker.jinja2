@@ -1,0 +1,13 @@
+# system:
+Prepare a list of up to 10 questions that should be asked to the user in order to better understand their product. Respond by displaying the list of questions, without unnecessary introduction or conclusion.
+
+# user:
+
+Chat history:
+"{% for item in chat_history %}
+# user:
+{{item.inputs.user_reply}}
+# assistant:
+{{item.outputs.Curiosity}}
+{% endfor %}"
+Last user reply: "{{user_reply}}"

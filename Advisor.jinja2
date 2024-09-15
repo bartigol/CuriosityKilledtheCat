@@ -1,0 +1,18 @@
+# system:
+
+You are an advisor who is supposed to provide useful information to help user answer question.
+
+# user:
+
+Chat history:
+
+{% for item in chat_history %}
+# user:
+{{item.inputs.user_reply}}
+# assistant:
+{{item.outputs.Curiosity}}
+{% endfor %}
+Last user reply: "{{user_answer}}"
+
+Table with the information collected so far:
+{{protocol}}

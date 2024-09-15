@@ -1,0 +1,35 @@
+# system:
+
+Your role is to update the table with the list of questions.
+
+Note: If the director's command is START, display the response EMPTY. Otherwise, proceed according to the user's request.
+
+Director's command: {{director}}
+
+# user:
+
+Update the table (markdown) where the first column is the question number, the second column is the question, and the third column is the answer. Ensure that the table includes all product-related questions, including those that have not yet been answered.
+
+When displaying the updated table, make sure you haven’t skipped or removed any part of its content!
+
+{{protocol}}
+
+When responding, display the table and nothing else.
+
+Below are some useful details:
+
+{{thinker}}
+
+Last user response: "{{user_answer}}"
+Last AI response: "{{curiosity}}"
+
+Conversation history:
+{% for item in chat_history %}
+# user:
+{{item.inputs.user_reply}}
+# assistant:
+{{item.outputs.Curiosity}}
+{{item.outputs.Thinker}}
+{% endfor %}
+
+Display the table.

@@ -1,0 +1,246 @@
+id: template_chat_flow
+name: Template Chat Flow
+inputs:
+  chat_history:
+    type: list
+    is_chat_input: false
+    is_chat_history: true
+  user_reply:
+    type: string
+    is_chat_input: true
+outputs:
+  Curiosity:
+    type: string
+    reference: ${Curiosity.output}
+    is_chat_output: true
+  Expert1:
+    type: string
+    reference: ${Expert1.output}
+  Expert2:
+    type: string
+    reference: ${Expert2.output}
+  Expert3:
+    type: string
+    reference: ${Expert3.output}
+nodes:
+- name: read_protocol
+  type: python
+  source:
+    type: code
+    path: read_protocol.py
+  inputs: {}
+  use_variants: false
+- name: Director
+  type: llm
+  source:
+    type: code
+    path: Director.jinja2
+  inputs:
+    deployment_name: gpt-4o
+    temperature: 1
+    top_p: 1
+    max_tokens: 4000
+    chat_history: ${inputs.chat_history}
+    protocol: ${read_protocol.output}
+    user_reply: ${inputs.user_reply}
+  provider: AzureOpenAI
+  connection: gpt-4o-connection
+  api: chat
+  module: promptflow.tools.aoai
+  use_variants: false
+- name: Thinker
+  type: llm
+  source:
+    type: code
+    path: Thinker.jinja2
+  inputs:
+    deployment_name: gpt-4o
+    temperature: 1
+    top_p: 1
+    max_tokens: 4000
+    chat_history: ${inputs.chat_history}
+    user_reply: ${inputs.user_reply}
+  provider: AzureOpenAI
+  connection: gpt-4o-connection
+  api: chat
+  module: promptflow.tools.aoai
+  activate:
+    when: ${Director.output}
+    is: THINK
+  use_variants: false
+- name: Advisor
+  type: llm
+  source:
+    type: code
+    path: Advisor.jinja2
+  inputs:
+    deployment_name: gpt-4o
+    temperature: 1
+    top_p: 1
+    max_tokens: 4000
+    chat_history: ${inputs.chat_history}
+    protocol: ${read_protocol.output}
+    user_answer: ${inputs.user_reply}
+  provider: AzureOpenAI
+  connection: gpt-4o-connection
+  api: chat
+  module: promptflow.tools.aoai
+  activate:
+    when: ${Director.output}
+    is: ADVISE
+  use_variants: false
+- name: Curiosity
+  type: llm
+  source:
+    type: code
+    path: Curiosity.jinja2
+  inputs:
+    deployment_name: gpt-4o
+    temperature: 1
+    top_p: 1
+    max_tokens: 4000
+    advisor: ${Advisor.output}
+    chat_history: ${inputs.chat_history}
+    dyrektorai: ${Director.output}
+    protocol: ${read_protocol.output}
+    thinker: ${Thinker.output}
+    user_answer: ${inputs.user_reply}
+  provider: AzureOpenAI
+  connection: gpt-4o-connection
+  api: chat
+  module: promptflow.tools.aoai
+  use_variants: false
+- name: Chronicler
+  type: llm
+  source:
+    type: code
+    path: Chronicler.jinja2
+  inputs:
+    deployment_name: gpt-4o
+    temperature: 1
+    top_p: 1
+    max_tokens: 4000
+    chat_history: ${inputs.chat_history}
+    curiosity: ${Curiosity.output}
+    director: ${Director.output}
+    protocol: ${read_protocol.output}
+    thinker: ${Thinker.output}
+    user_answer: ${inputs.user_reply}
+  provider: AzureOpenAI
+  connection: gpt-4o-connection
+  api: chat
+  module: promptflow.tools.aoai
+  use_variants: false
+- name: Save_to_protocol
+  type: python
+  source:
+    type: code
+    path: Save_to_protocol.py
+  inputs:
+    input_text: ${Chronicler.output}
+  use_variants: false
+- name: CPO
+  type: llm
+  source:
+    type: code
+    path: CPO.jinja2
+  inputs:
+    deployment_name: gpt-4o
+    temperature: 1
+    top_p: 1
+    max_tokens: 4000
+    protocol: ${read_protocol.output}
+  provider: AzureOpenAI
+  connection: gpt-4o-connection
+  api: chat
+  module: promptflow.tools.aoai
+  activate:
+    when: ${Director.output}
+    is: END
+  use_variants: false
+- name: Manager
+  type: llm
+  source:
+    type: code
+    path: Manager.jinja2
+  inputs:
+    deployment_name: gpt-4o
+    temperature: 1
+    top_p: 1
+    max_tokens: 4000
+    requirements: ${CPO.output}
+  provider: AzureOpenAI
+  connection: gpt-4o-connection
+  api: chat
+  module: promptflow.tools.aoai
+  use_variants: false
+- name: ProductOwner
+  type: llm
+  source:
+    type: code
+    path: ProductOwner.jinja2
+  inputs:
+    deployment_name: gpt-4o
+    temperature: 1
+    top_p: 1
+    max_tokens: 4000
+    requirements: ${CPO.output}
+  provider: AzureOpenAI
+  connection: gpt-4o-connection
+  api: chat
+  module: promptflow.tools.aoai
+  use_variants: false
+- name: Expert1
+  type: llm
+  source:
+    type: code
+    path: Expert1.jinja2
+  inputs:
+    deployment_name: gpt-4o
+    temperature: 1
+    top_p: 1
+    max_tokens: 4000
+    Manager: ${Manager.output}
+    ProductOwner: ${ProductOwner.output}
+  provider: AzureOpenAI
+  connection: gpt-4o-connection
+  api: chat
+  module: promptflow.tools.aoai
+  use_variants: false
+- name: Expert2
+  type: llm
+  source:
+    type: code
+    path: Expert2.jinja2
+  inputs:
+    deployment_name: gpt-4o
+    temperature: 1
+    top_p: 1
+    max_tokens: 4000
+    Manager: ${Manager.output}
+    ProductOwner: ${ProductOwner.output}
+  provider: AzureOpenAI
+  connection: gpt-4o-connection
+  api: chat
+  module: promptflow.tools.aoai
+  use_variants: false
+- name: Expert3
+  type: llm
+  source:
+    type: code
+    path: Expert3.jinja2
+  inputs:
+    deployment_name: gpt-4o
+    temperature: 1
+    top_p: 1
+    max_tokens: 4000
+    Manager: ${Manager.output}
+    ProductOwner: ${ProductOwner.output}
+  provider: AzureOpenAI
+  connection: gpt-4o-connection
+  api: chat
+  module: promptflow.tools.aoai
+  use_variants: false
+node_variants: {}
+environment:
+  python_requirements_txt: requirements.txt
